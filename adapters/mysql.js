@@ -4,11 +4,12 @@ module.exports = function (config, logger) {
     var pool = mysql.createPool({
         host: config.host,
         port: config.port,
-        database: config.db,
         user: config.user,
         password: config.password,
         connectionLimit: 10
     });
+
+    var database = config.db;
 
     function exec(query, values) {
         return pool.query(query, values).catch(function (err) {
@@ -21,7 +22,11 @@ module.exports = function (config, logger) {
     }
 
     function ensureMigrationTableExists() {
-        return exec('create table if not exists `__migrations__` (id bigint NOT NULL)');
+        return exec('CREATE DATABASE IF NOT EXISTS ' + database).then(function(){
+            return exec('USE ' + database).then(function(){
+                return exec('create table if not exists `__migrations__` (id bigint NOT NULL)');
+            });
+        });
     }
 
     return {
@@ -35,7 +40,7 @@ module.exports = function (config, logger) {
         applyMigration: function applyMigration(migration, sql) {
             return exec(sql).then(function (result) {
                 logger.log('Applying ' + migration);
-                logger.log(result)
+                logger.log(result);
                 logger.log('===============================================');
                 var values = [migration.match(/^(\d)+/)[0]];
                 return exec('insert into __migrations__ (id) values (?)', values);
@@ -44,7 +49,7 @@ module.exports = function (config, logger) {
         rollbackMigration: function rollbackMigration(migration, sql) {
             return exec(sql).then(function (result) {
                 logger.log('Reverting ' + migration);
-                logger.log(result)
+                logger.log(result);
                 logger.log('===============================================');
                 var values = [migration.match(/^(\d)+/)[0]];
                 return exec('delete from __migrations__ where id = ?', values);
