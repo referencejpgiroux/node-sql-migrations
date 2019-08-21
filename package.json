@@ -21,7 +21,8 @@
   "dependencies": {
     "chalk": "^1.1.1",
     "mkdirp": "^0.5.0",
-    "promise-mysql": "^3.3.1",
-    "pg": "^7.4.1"
+    "mssql": "^5.1.0",
+    "pg": "^7.4.1",
+    "promise-mysql": "^3.3.1"
   }
 }
